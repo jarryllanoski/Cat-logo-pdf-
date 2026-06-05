@@ -103,65 +103,65 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 
 /* ── PREVIEW ── */
 .preview-wrap{
-  background:#e8e8e8;border-radius:14px;overflow:hidden;
-  /* phone-style shadow */
+  background:#fff;border-radius:14px;overflow:hidden;
   box-shadow:0 8px 30px rgba(0,0,0,.4);
+  width:100%;
 }
-.preview-scroll{overflow-x:auto}
+.preview-scroll{width:100%}
 
 /* ── CATALOG PAGE ── */
 .cat-page{
-  width:680px;background:#fff;color:#111;
+  width:100%;background:#fff;color:#111;
   font-family:'DM Sans',sans-serif;
 }
 .cat-cover{
-  min-height:220px;display:flex;flex-direction:column;
+  min-height:200px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;text-align:center;
-  padding:36px 28px;position:relative;
+  padding:32px 20px;position:relative;
 }
 .cat-cover-logo{
-  width:72px;height:72px;border-radius:14px;object-fit:cover;
-  margin-bottom:14px;border:3px solid rgba(255,255,255,.3);
+  width:64px;height:64px;border-radius:12px;object-fit:cover;
+  margin-bottom:12px;border:3px solid rgba(255,255,255,.3);
 }
 .cat-cover-logo-ph{
-  width:72px;height:72px;border-radius:14px;
+  width:64px;height:64px;border-radius:12px;
   background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
-  font-size:2rem;margin-bottom:14px;border:2px dashed rgba(255,255,255,.35);
+  font-size:1.8rem;margin-bottom:12px;border:2px dashed rgba(255,255,255,.35);
 }
-.cat-title{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;line-height:1.1;margin-bottom:6px}
-.cat-sub{font-size:.9rem;opacity:.85;margin-bottom:14px}
+.cat-title{font-family:'Syne',sans-serif;font-size:clamp(1.2rem,5vw,1.9rem);font-weight:800;line-height:1.1;margin-bottom:6px}
+.cat-sub{font-size:clamp(.78rem,3vw,.9rem);opacity:.85;margin-bottom:12px}
 .cat-badge{
   display:inline-block;padding:5px 14px;border-radius:100px;
-  font-size:.72rem;font-weight:700;letter-spacing:.5px;
+  font-size:.68rem;font-weight:700;letter-spacing:.5px;
 }
-.cat-products{padding:24px 24px 16px}
+.cat-products{padding:18px 16px 12px}
 .cat-section-label{
-  font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;
-  color:#aaa;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eee;
+  font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;
+  color:#aaa;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;
 }
-.cat-grid{display:grid;gap:12px}
+.cat-grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
 .cat-card{border:1px solid #f0f0f0;border-radius:10px;overflow:hidden;background:#fff}
-.cat-img{width:100%;aspect-ratio:1;background:#f7f7f7;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:2.5rem;color:#ccc}
+.cat-img{width:100%;aspect-ratio:1;background:#f7f7f7;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:2rem;color:#ccc}
 .cat-img img{width:100%;height:100%;object-fit:cover}
-.cat-body{padding:10px 10px 8px}
-.cat-pcode{font-size:.62rem;color:#bbb;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
-.cat-pname{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin:2px 0 4px;color:#111;line-height:1.2}
-.cat-pdesc{font-size:.68rem;color:#888;line-height:1.4;margin-bottom:6px}
-.cat-pprice{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800}
-.cat-ptags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
-.cat-ptag{font-size:.6rem;padding:2px 7px;border-radius:100px;font-weight:700}
+.cat-body{padding:8px 9px 7px}
+.cat-pcode{font-size:.58rem;color:#bbb;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.cat-pname{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;margin:2px 0 3px;color:#111;line-height:1.2}
+.cat-pdesc{font-size:.65rem;color:#888;line-height:1.35;margin-bottom:5px}
+.cat-pprice{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800}
+.cat-ptags{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.cat-ptag{font-size:.58rem;padding:2px 6px;border-radius:100px;font-weight:700}
 .cat-plink{
   display:inline-flex;align-items:center;gap:4px;
-  font-size:.68rem;font-weight:700;text-decoration:none;
-  padding:5px 10px;border-radius:7px;margin-top:7px;
+  font-size:.65rem;font-weight:700;text-decoration:none;
+  padding:5px 9px;border-radius:7px;margin-top:6px;
 }
 .cat-footer{
-  padding:16px 24px;border-top:1px solid #f0f0f0;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  padding:14px 16px;border-top:1px solid #f0f0f0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
 }
 .cat-footer-contacts{display:flex;flex-direction:column;gap:3px}
-.cat-footer-contacts span{font-size:.68rem;color:#777}
-.cat-footer-brand{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;color:#ccc}
+.cat-footer-contacts span{font-size:.65rem;color:#777}
+.cat-footer-brand{font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;color:#ccc}
 
 /* ── SWATCH ── */
 .swatch-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -329,12 +329,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
   </div>
 
   <!-- SCREEN: PREVIEW -->
-  <div class="screen" id="screen-preview" style="padding:12px;gap:10px">
+  <div class="screen" id="screen-preview" style="padding:10px;gap:10px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" style="flex:1" onclick="window.print()">🖨 Imprimir</button>
       <button class="btn btn-green btn-sm" style="flex:1" onclick="exportPDF()">⬇ Exportar PDF</button>
     </div>
-    <p style="font-size:.75rem;color:var(--muted);text-align:center">Desliza para ver el catálogo completo →</p>
     <div class="preview-wrap">
       <div class="preview-scroll">
         <div class="cat-page" id="catalogPage">
@@ -648,9 +647,8 @@ function updateCatalog(){
     [ph&&`<span>📞 ${ph}</span>`,em&&`<span>✉ ${em}</span>`,wb&&`<span>🌐 ${wb}</span>`].filter(Boolean).join('');
   document.getElementById('catBrand').textContent=(document.getElementById('supplierName').value||'').toUpperCase();
 
-  // Grid
+  // Grid (columnas fijas por CSS, 2 en mobile)
   const grid=document.getElementById('catGrid');
-  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
 
   if(!products.length){
     grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:32px;color:#bbb;font-size:.8rem">Agrega productos en la pestaña 📦</div>`;
