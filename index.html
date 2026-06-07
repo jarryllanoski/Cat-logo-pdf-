@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CatálogoBuilder Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --bg:#0e0e0e;--sur:#181818;--s2:#202020;--s3:#282828;
+  --brd:#2e2e2e;--acc:#009688;--acc2:#00bfa5;--yel:#f0b429;
+  --red:#e53935;--text:#f0ede8;--muted:#777;--green:#22c55e;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px;background:var(--sur);border-bottom:1px solid var(--brd);flex-shrink:0}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-.3px;color:#fff}
+.logo span{color:var(--acc2)}
+.topbar-r{display:flex;gap:8px}
+
+/* SCREENS */
+.main{flex:1;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px;display:none;flex-direction:column;gap:12px}
+.screen.on{display:flex}
+#sc-preview{padding:0;background:#f2f2f2}
+
+/* BOTTOM NAV */
+.bnav{display:flex;background:var(--sur);border-top:1px solid var(--brd);flex-shrink:0}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:9px 4px;cursor:pointer;color:var(--muted);font-size:.6rem;font-weight:600;letter-spacing:.4px;border:none;background:none;transition:color .15s}
+.bn .ic{font-size:1.25rem;line-height:1}
+.bn.on{color:var(--acc2)}
+
+/* BUTTONS */
+.btn{font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;border:none;border-radius:10px;padding:11px 16px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-acc{background:var(--acc);color:#fff}.btn-acc:active{background:var(--acc2)}
+.btn-grn{background:var(--green);color:#fff}
+.btn-red{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn-ghost{background:var(--s2);color:var(--text);border:1.5px solid var(--brd)}
+.btn-full{width:100%}
+.btn-sm{padding:7px 12px;font-size:.76rem;border-radius:8px}
+
+/* CARD */
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:13px;padding:15px}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px}
+
+/* FIELDS */
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.73rem;color:var(--muted);margin-bottom:4px;font-weight:500}
+.field input,.field textarea,.field select{width:100%;background:var(--s2);border:1.5px solid var(--brd);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;padding:10px 12px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--acc2)}
+.field textarea{resize:vertical;min-height:60px}
+.field input[type=color]{padding:3px 5px;height:40px;cursor:pointer}
+.field input[type=file]{padding:6px 8px;cursor:pointer;font-size:.78rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* SEARCH BAR */
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--s2);border:1.5px solid var(--brd);border-radius:100px;padding:10px 16px;margin-bottom:12px;transition:border-color .15s}
+.searchbar:focus-within{border-color:var(--acc2)}
+.searchbar input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem}
+.searchbar .si{color:var(--muted);font-size:1.1rem;flex-shrink:0}
+.searchbar .sc{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0}
+
+/* PRODUCT LIST */
+.plist{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:11px;background:var(--s2);border:1.5px solid var(--brd);border-radius:12px;padding:9px 11px;cursor:pointer;transition:border-color .15s}
+.prow:active{border-color:var(--acc2)}
+.pthumb{width:44px;height:44px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.pthumb img{width:100%;height:100%;object-fit:cover}
+.pinf{flex:1;min-width:0}
+.pinf .pn{font-weight:600;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pinf .pc{font-size:.7rem;color:var(--muted);margin-top:2px}
+.pdel{background:none;border:none;color:var(--muted);font-size:1rem;padding:6px;cursor:pointer;flex-shrink:0}
+
+/* IMPORT BAR */
+.import-bar{display:flex;gap:8px;flex-wrap:wrap}
+.import-btn{flex:1;min-width:120px;background:var(--s2);border:1.5px dashed var(--brd);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.import-btn:active{border-color:var(--acc2)}
+.import-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.import-btn .ib-icon{font-size:1.5rem;margin-bottom:4px}
+.import-btn .ib-label{font-size:.72rem;color:var(--muted);font-weight:500}
+
+/* PRESET COLORS */
+.pcolors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pcol{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2.5px solid transparent;transition:transform .1s;flex-shrink:0}
+.pcol:active{transform:scale(.88)}
+.pcol.sel{border-color:#fff}
+
+/* UPZONE */
+.upzone{border:2px dashed var(--brd);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.upzone:active{border-color:var(--acc2)}
+.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upzone-prev{width:64px;height:64px;object-fit:cover;border-radius:8px;display:none;margin:0 auto 6px}
+.upzone-icon{font-size:1.6rem;margin-bottom:5px}
+.upzone-text{font-size:.74rem;color:var(--muted)}
+
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.moverlay.on{display:flex}
+.modal{background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:18px 18px 30px}
+.mhandle{width:34px;height:4px;background:var(--brd);border-radius:10px;margin:0 auto 16px}
+.mtitle{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:14px}
+.mtabs{display:flex;gap:2px;background:var(--s2);border-radius:9px;padding:3px;margin-bottom:14px}
+.mtab{flex:1;text-align:center;padding:7px;font-size:.76rem;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:500;transition:all .15s}
+.mtab.on{background:var(--sur);color:var(--text)}
+.mfooter{display:flex;gap:8px;margin-top:16px}
+.mfooter .btn{flex:1}
+
+/* EMPTY */
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty-ic{font-size:2.2rem;opacity:.35;margin-bottom:8px}
+.empty p{font-size:.78rem;line-height:1.6}
+
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--s3);border:1px solid var(--brd);border-radius:100px;padding:9px 18px;font-size:.8rem;font-weight:500;z-index:500;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.loading{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading.on{display:flex}
+.spin{width:38px;height:38px;border:3px solid var(--brd);border-top-color:var(--acc2);border-radius:50%;animation:sp .75s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════
+   CATALOG PREVIEW (white page)
+══════════════════════════════ */
+#catalogPage{width:100%;background:#fff;color:#111;font-family:'DM Sans',sans-serif}
+
+/* action bar */
+.preview-bar{display:flex;gap:8px;padding:10px;background:var(--sur);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:10;flex-shrink:0}
+
+/* HEADER band */
+.cat-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;
+}
+.cat-header-logo{height:32px;object-fit:contain;max-width:120px}
+.cat-header-logo-ph{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;letter-spacing:-.3px}
+.cat-header-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1rem;color:#fff;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.cat-header-title::before{content:'▶';font-size:.7rem}
+.cat-page-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.5rem;color:#fff;background:rgba(255,255,255,.15);padding:2px 12px;border-radius:4px}
+
+/* SUPPLIER INFO band */
+.cat-info{padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #e5e5e5}
+.cat-info-logo{width:52px;height:52px;border-radius:8px;object-fit:cover;border:2px solid #e5e5e5;flex-shrink:0}
+.cat-info-logo-ph{width:52px;height:52px;border-radius:8px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:2px solid #e5e5e5}
+.cat-info-text .cin{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:#111}
+.cat-info-text .cis{font-size:.72rem;color:#888;margin-top:1px}
+.cat-info-contacts{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:2px}
+.cat-info-contacts span{font-size:.65rem;color:#777}
+
+/* SECTION LABEL */
+.cat-sec{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#999;padding:10px 16px 6px;border-bottom:1px solid #eee;margin-bottom:8px}
+
+/* PRODUCTS GRID */
+.cat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px}
+.cat-card{border:1px solid #e8e8e8;border-radius:0;margin:-0.5px;background:#fff;display:flex;flex-direction:column}
+.cat-img-wrap{width:100%;aspect-ratio:1;background:#f7f7f7;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:1.8rem;color:#ccc;position:relative}
+.cat-img-wrap img{width:100%;height:100%;object-fit:contain;padding:4px}
+.cat-body{padding:7px 8px;flex:1;display:flex;flex-direction:column;gap:3px}
+.cat-code{font-size:.58rem;color:#bbb;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.cat-name{font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;line-height:1.2;color:#111}
+.cat-desc{font-size:.6rem;color:#888;line-height:1.3;flex:1}
+.cat-price-table{margin-top:4px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden}
+.cat-pt-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;background:#e0e0e0}
+.cat-pt-head span{font-size:.52rem;font-weight:700;text-align:center;padding:2px 1px;color:#555;text-transform:uppercase;letter-spacing:.2px}
+.cat-pt-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr}
+.cat-pt-row span{font-size:.6rem;font-weight:700;text-align:center;padding:3px 1px;color:#111}
+.cat-pt-row span:nth-child(1){background:#f5f5f5}
+.cat-pt-row span:nth-child(3){background:#b2dfdb;color:#004d40}
+.cat-pt-row span:nth-child(4){background:#e0f2f1;color:#00695c}
+.cat-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.cat-tag{font-size:.55rem;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:uppercase}
+.cat-link{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:600;text-decoration:none;padding:4px 8px;border-radius:5px;margin-top:4px;width:fit-content}
+
+/* FOOTER */
+.cat-footer{padding:10px 16px;border-top:2px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.cat-footer-note{font-size:.62rem;color:#aaa;font-style:italic}
+.cat-footer-brand{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700}
+
+/* 2-col grid for mobile */
+@media(max-width:400px){.cat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Catálogo<span>Builder</span></div>
+  <div class="topbar-r">
+    <button class="btn btn-grn btn-sm" onclick="exportPDF()">⬇ PDF</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ── SCREEN: PROVEEDOR ── -->
+  <div class="screen on" id="sc-proveedor">
+    <div class="card">
+      <div class="card-title">Datos del proveedor</div>
+      <div class="field"><label>Nombre</label><input id="sName" value="TOTAL Tools" oninput="renderCat()"></div>
+      <div class="field"><label>Eslogan</label><input id="sSlogan" value="One-Stop Tools Station" oninput="renderCat()"></div>
+      <div class="field"><label>Subtítulo portada (ej: INGRESOS MAYO 2026)</label><input id="sSubtitle" value="INGRESOS MAYO 2026" oninput="renderCat()"></div>
+      <div class="field"><label>Logo</label>
+        <div class="upzone" onclick="document.getElementById('uLogo').click()">
+          <img id="prevLogo" class="upzone-prev"><div id="phLogo"><div class="upzone-icon">🏢</div><div class="upzone-text">Subir logo</div></div>
+          <input type="file" id="uLogo" accept="image/*" onchange="loadLogo(event)">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Color de encabezado</div>
+      <div class="pcolors" id="presetCols"></div>
+      <div class="frow">
+        <div class="field"><label>Color principal</label><input type="color" id="cMain" value="#00695c" oninput="renderCat()"></div>
+        <div class="field"><label>Color acento</label><input type="color" id="cAcc" value="#f0b429" oninput="renderCat()"></div>
+      </div>
+      <div class="field"><label>Columnas (en PDF)</label>
+        <select id="gridCols" onchange="renderCat()"><option value="2">2 columnas</option><option value="3" selected>3 columnas</option></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Contacto</div>
+      <div class="field"><label>WhatsApp / Teléfono</label><input id="cPhone" value="+51 999 000 111" oninput="renderCat()"></div>
+      <div class="field"><label>Email</label><input id="cEmail" value="ventas@totaltools.com" oninput="renderCat()"></div>
+      <div class="field"><label>Web</label><input id="cWeb" value="www.totaltools.com" oninput="renderCat()"></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: PRODUCTOS ── -->
+  <div class="screen" id="sc-productos">
+    <!-- Search -->
+    <div class="searchbar">
+      <span class="si">🔍</span>
+      <input id="searchInput" placeholder="Buscar por nombre, código, precio..." oninput="filterProducts()">
+      <button class="sc" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+
+    <!-- Import -->
+    <div class="import-bar">
+      <div class="import-btn">
+        <div class="ib-icon">📄</div>
+        <div class="ib-label">Subir PDF<br><span style="font-size:.62rem;opacity:.6">(extrae productos)</span></div>
+        <input type="file" accept=".pdf" onchange="importPDF(event)">
+      </div>
+      <div class="import-btn">
+        <div class="ib-icon">📊</div>
+        <div class="ib-label">Subir Excel<br><span style="font-size:.62rem;opacity:.6">(TOTAL format)</span></div>
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="importExcel(event)">
+      </div>
+      <button class="btn btn-acc btn-sm" onclick="openAdd()" style="flex:1;min-width:100px">＋ Manual</button>
+    </div>
+
+    <!-- Stats -->
+    <div style="font-size:.72rem;color:var(--muted);padding:0 2px" id="statsBar">0 productos</div>
+
+    <!-- List -->
+    <div class="plist" id="productList">
+      <div class="empty"><div class="empty-ic">📦</div><p>Sin productos.<br>Importa Excel/PDF o agrega manualmente.</p></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: PREVIEW ── -->
+  <div class="screen" id="sc-preview">
+    <div class="preview-bar">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="window.print()">🖨</button>
+      <button class="btn btn-grn btn-sm" style="flex:2" onclick="exportPDF()">⬇ Exportar PDF</button>
+    </div>
+
+    <div id="catalogPage">
+      <!-- HEADER BAND -->
+      <div class="cat-header" id="catHeader">
+        <div id="catHeaderLogo"><div class="cat-header-logo-ph" id="catHName">TOTAL</div></div>
+        <div class="cat-header-title" id="catHeaderTitle">INGRESOS MAYO 2026</div>
+        <div class="cat-page-num">1</div>
+      </div>
+
+      <!-- SUPPLIER INFO -->
+      <div class="cat-info">
+        <div id="catInfoLogo"><div class="cat-info-logo-ph">🏢</div></div>
+        <div class="cat-info-text">
+          <div class="cin" id="catInfoName">TOTAL Tools</div>
+          <div class="cis" id="catInfoSlogan">One-Stop Tools Station</div>
+        </div>
+        <div class="cat-info-contacts" id="catInfoContacts"></div>
+      </div>
+
+      <!-- SECTION -->
+      <div class="cat-sec">NUESTROS PRODUCTOS</div>
+
+      <!-- GRID -->
+      <div class="cat-grid" id="catGrid"></div>
+
+      <!-- FOOTER -->
+      <div class="cat-footer">
+        <div class="cat-footer-note">Las imágenes son referenciales.</div>
+        <div class="cat-footer-brand" id="catFootBrand" style="color:#009688">TOTAL TOOLS</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bn on" onclick="goScreen('proveedor',this)"><span class="ic">🏢</span>PROVEEDOR</button>
+  <button class="bn" onclick="goScreen('productos',this)"><span class="ic">📦</span>PRODUCTOS</button>
+  <button class="bn" onclick="goScreen('preview',this);renderCat()"><span class="ic">👁</span>PREVIEW</button>
+</nav>
+
+<!-- MODAL: ADD/EDIT -->
+<div class="moverlay" id="mModal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="mTitle">Agregar Producto</div>
+    <div class="mtabs">
+      <div class="mtab on" onclick="mTab('info',this)">Info</div>
+      <div class="mtab" onclick="mTab('imagen',this)">Imagen</div>
+      <div class="mtab" onclick="mTab('precios',this)">Precios</div>
+      <div class="mtab" onclick="mTab('links',this)">Links</div>
+    </div>
+    <div id="mt-info">
+      <div class="field"><label>Código *</label><input id="p-code" placeholder="Ej: TGT141181"></div>
+      <div class="field"><label>Nombre *</label><input id="p-name" placeholder="Ej: Corta Césped 141cc 4-Tiempos"></div>
+      <div class="field"><label>Descripción corta</label><textarea id="p-desc" placeholder="Especificaciones técnicas..."></textarea></div>
+      <div class="field"><label>Tags (separados por coma)</label><input id="p-tags" placeholder="Nuevo, Oferta, Stock"></div>
+    </div>
+    <div id="mt-imagen" style="display:none">
+      <div class="field"><label>Foto del producto</label>
+        <div class="upzone">
+          <img id="pPrev" class="upzone-prev"><div id="pPh"><div class="upzone-icon">📷</div><div class="upzone-text">Toca para subir foto</div></div>
+          <input type="file" id="pImgUp" accept="image/*" onchange="loadPImg(event)">
+        </div>
+      </div>
+      <div class="field"><label>O URL de imagen</label><input id="p-imgurl" placeholder="https://..." oninput="pImgUrl()"></div>
+    </div>
+    <div id="mt-precios" style="display:none">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px">Ingresa los precios como en el catálogo TOTAL (Precio Sales, Descuento 30%, Descuento 25%)</div>
+      <div class="frow">
+        <div class="field"><label>Cantidad / Caja</label><input id="p-qty" inputmode="numeric" placeholder="1"></div>
+        <div class="field"><label>Precio Sales (S/)</label><input id="p-price" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Desc. 30% (S/)</label><input id="p-d30" inputmode="decimal" placeholder="0.00"></div>
+        <div class="field"><label>Desc. 25% (S/)</label><input id="p-d25" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+    </div>
+    <div id="mt-links" style="display:none">
+      <div class="field"><label>Link del producto</label><input id="p-link" placeholder="https://..."></div>
+      <div class="field"><label>Texto del botón</label><input id="p-linktext" placeholder="Ver detalle"></div>
+      <div class="field"><label>WhatsApp (con código país)</label><input id="p-wa" inputmode="tel" placeholder="51999000111"></div>
+      <div class="field"><label>Mensaje WhatsApp</label><textarea id="p-wamsg" placeholder="Hola, me interesa este producto..."></textarea></div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-acc" onclick="saveProduct()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loadingEl">
+  <div class="spin"></div>
+  <div id="loadingMsg" style="font-size:.82rem;color:var(--muted);margin-top:4px">Procesando...</div>
+  <div id="progressWrap" style="display:none;flex-direction:column;align-items:center;gap:6px;width:240px">
+    <div style="width:100%;height:6px;background:#333;border-radius:10px;overflow:hidden">
+      <div id="progressBar" style="height:100%;background:#00bfa5;border-radius:10px;width:0%;transition:width .3s"></div>
+    </div>
+    <div id="progressText" style="font-size:.72rem;color:#777">0%</div>
+    <button onclick="cancelPDF()" style="margin-top:4px;background:transparent;border:1px solid #555;color:#aaa;padding:5px 14px;border-radius:8px;font-size:.75rem;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+<div class="toast" id="toastEl"></div>
+
+<script>
+const {jsPDF} = window.jspdf;
+
+// ── STATE ──
+let products = [];
+let filtered = [];
+let editIdx = null;
+let logoUrl = null;
+let prodImg = null;
+let searchQ = '';
+
+const PRESETS = ['#004d40','#006064','#1565c0','#1a237e','#b71c1c','#bf360c','#33691e','#4a148c','#212121','#37474f'];
+
+// ── INIT ──
+(function(){
+  const row = document.getElementById('presetCols');
+  PRESETS.forEach((c,i) => {
+    const el = document.createElement('div');
+    el.className = 'pcol' + (i===0?' sel':'');
+    el.style.background = c;
+    el.onclick = () => {
+      document.getElementById('cMain').value = c;
+      document.querySelectorAll('.pcol').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel');
+      renderCat();
+    };
+    row.appendChild(el);
+  });
+
+  // sample products
+  products = [
+    {code:'TGT141181',name:'Corta Césped 141cc 4-Tiempos 4.0HP',desc:'2600RPM 460mm(18") INDUSTRIAL',tags:['Stock'],img:null,qty:'1',price:'1109.90',d30:'776.93',d25:'832.43',link:'',linktext:'',wa:'',wamsg:''},
+    {code:'TGTLS2545',name:'Carrete Línea para Guadaña 2.5MM 4M',desc:'2.5mm x 4m',tags:['Stock'],img:null,qty:'50',price:'35.90',d30:'25.13',d25:'26.93',link:'',linktext:'',wa:'',wamsg:''},
+    {code:'TGT196202',name:'Corta Césped 196cc 4-Tiempos 4.8HP',desc:'2800RPM 510mm(20") AUTO LIMPIEZA / AVANCE INDUSTRIAL',tags:['Nuevo'],img:null,qty:'1',price:'1897.90',d30:'1328.53',d25:'1423.43',link:'',linktext:'',wa:'',wamsg:''},
+  ];
+  filtered = [...products];
+  renderProducts();
+  renderCat();
+})();
+
+// ── NAVIGATION ──
+function goScreen(name, btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sc-'+name).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ── SEARCH ──
+function filterProducts(){
+  searchQ = document.getElementById('searchInput').value.trim().toLowerCase();
+  document.getElementById('searchClear').style.display = searchQ ? 'block' : 'none';
+  filtered = searchQ
+    ? products.filter(p =>
+        (p.name||'').toLowerCase().includes(searchQ) ||
+        (p.code||'').toLowerCase().includes(searchQ) ||
+        (p.price||'').includes(searchQ) ||
+        (p.desc||'').toLowerCase().includes(searchQ) ||
+        (p.tags||[]).join(' ').toLowerCase().includes(searchQ)
+      )
+    : [...products];
+  renderProducts();
+}
+
+function clearSearch(){
+  document.getElementById('searchInput').value = '';
+  searchQ = '';
+  document.getElementById('searchClear').style.display = 'none';
+  filtered = [...products];
+  renderProducts();
+}
+
+// ── IMPORT EXCEL ──
+function importExcel(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(ev.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      let imported = 0;
+      // Try to detect TOTAL format or generic
+      for(let i=0; i<rows.length; i++){
+        const row = rows[i];
+        if(!row || row.length < 2) continue;
+        const rowStr = row.map(c=>String(c||'').toLowerCase()).join('|');
+
+        // Skip header rows
+        if(rowStr.includes('codigo') || rowStr.includes('nombre') || rowStr.includes('product')) continue;
+
+        // Try to extract code, name, price
+        let code='', name='', desc='', price='', d30='', d25='', qty='1';
+
+        // TOTAL format: CODE | NAME | PRODUCT/DESC | PRICE_REG | SUPER_COMBO | SUPER_TOTAL | MINI | MASTER
+        if(row[0] && String(row[0]).match(/^[A-Z]{2,}/)){
+          code = String(row[0]).trim();
+          name = String(row[1]||'').trim();
+          desc = String(row[2]||'').trim().slice(0,120);
+          price = String(row[3]||'').replace(/[^0-9.]/g,'');
+          d30 = String(row[4]||'').replace(/[^0-9.]/g,'');
+          d25 = String(row[5]||'').replace(/[^0-9.]/g,'');
+          qty = String(row[6]||'1').replace(/[^0-9]/g,'') || '1';
+        } else if(row[1] && String(row[1]).trim().length > 2){
+          // Generic: skip col 0, code at 1
+          code = String(row[1]).trim();
+          name = String(row[2]||row[1]).trim();
+          desc = String(row[3]||'').trim().slice(0,120);
+          price = String(row[4]||'').replace(/[^0-9.]/g,'');
+        }
+
+        if(!name || name.length < 2) continue;
+        if(products.find(p=>p.code===code && code)) continue; // skip dup
+
+        products.push({code,name,desc,tags:[],img:null,qty,price,d30,d25,link:'',linktext:'',wa:'',wamsg:''});
+        imported++;
+      }
+
+      filtered = [...products];
+      renderProducts();
+      renderCat();
+      toast(`✅ ${imported} productos importados del Excel`);
+    } catch(err) {
+      toast('❌ Error al leer el Excel');
+      console.error(err);
+    }
+    e.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ── IMPORT PDF (extract text, detect products) ──
+async function importPDF(e){
+  const file = e.target.files[0]; if(!file) return;
+  e.target.value='';
+
+  if(!window.pdfjsLib){
+    toast('⚠️ PDF.js no cargó. Recarga la página.');
+    return;
+  }
+
+  // Show progress UI
+  const loadEl   = document.getElementById('loadingEl');
+  const msgEl    = document.getElementById('loadingMsg');
+  const progWrap = document.getElementById('progressWrap');
+  const progBar  = document.getElementById('progressBar');
+  const progTxt  = document.getElementById('progressText');
+
+  window._pdfCancel = false;
+  loadEl.classList.add('on');
+  progWrap.style.display = 'flex';
+
+  function setProgress(pg, total){
+    const pct = Math.round((pg / total) * 100);
+    progBar.style.width = pct + '%';
+    progTxt.textContent = pct + '%';
+    msgEl.textContent = `Página ${pg} de ${total}`;
+  }
+  function hideProg(){
+    loadEl.classList.remove('on');
+    progWrap.style.display = 'none';
+    progBar.style.width = '0%';
+    msgEl.textContent = 'Procesando...';
+  }
+
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    msgEl.textContent = 'Abriendo PDF...';
+
+    // Stream PDF without loading it all — use chunked range requests
+    // For local file we use URL.createObjectURL which streams from disk
+    const fileURL = URL.createObjectURL(file);
+    const pdfDoc  = await pdfjsLib.getDocument({
+      url: fileURL,
+      disableAutoFetch: true,   // don't pre-fetch all pages
+      disableStream: false,
+    }).promise;
+
+    const totalPages = pdfDoc.numPages;
+    const BATCH = 10; // pages per batch
+    let allText = '';
+    let imported = 0;
+    let pg = 1;
+
+    // Process in batches of 10 pages
+    while(pg <= totalPages){
+      if(window._pdfCancel) break;
+
+      const batchEnd = Math.min(pg + BATCH - 1, totalPages);
+
+      for(let i = pg; i <= batchEnd; i++){
+        if(window._pdfCancel) break;
+        setProgress(i, totalPages);
+
+        const page    = await pdfDoc.getPage(i);
+        const content = await page.getTextContent();
+        const text    = content.items.map(x => x.str).join(' ');
+        allText += text + '\n';
+        page.cleanup();
+      }
+
+      // Extract products from text accumulated so far, avoid re-processing
+      const newImported = extractProducts(allText);
+      if(newImported > 0){
+        imported += newImported;
+        allText = ''; // clear processed text to free memory
+        renderProducts();
+      }
+
+      pg = batchEnd + 1;
+
+      // Yield to browser — prevents freeze + allows cancel
+      await new Promise(r => setTimeout(r, 30));
+    }
+
+    URL.revokeObjectURL(fileURL);
+    renderCat();
+
+    if(window._pdfCancel){
+      toast(`⏹ Cancelado. ${imported} productos importados hasta ahora.`);
+    } else {
+      toast(imported > 0
+        ? `✅ ${imported} productos importados de ${totalPages} páginas`
+        : '⚠️ No se encontraron códigos. Prueba con el Excel.');
+    }
+  } catch(err){
+    console.error('PDF error:', err);
+    toast('⚠️ Error: ' + (err.message || 'desconocido'));
+  }
+  hideProg();
+}
+
+function cancelPDF(){ window._pdfCancel = true; }
+
+function extractProducts(text){
+  const stopWords = new Set([
+    'TOTAL','SAFARI','SUPER','COMBO','STOCK','NUEVO','PRECIO','VENTAS',
+    'LISTA','PRODUCTS','INGRESOS','INDUSTRIAL','MASTER','MINI','REGULAR'
+  ]);
+  const codeRe = /\b([A-Z]{2,5}[A-Z0-9]{3,10})\b/g;
+  const rawCodes = [...text.matchAll(codeRe)].map(m => m[1]);
+  const codes = [...new Set(rawCodes)].filter(c =>
+    !stopWords.has(c) && /\d/.test(c) && c.length >= 6
+  );
+
+  let count = 0;
+  for(const code of codes){
+    if(products.find(p => p.code === code)) continue;
+    const idx = text.indexOf(code);
+    if(idx < 0) continue;
+
+    const after = text.slice(idx + code.length, idx + code.length + 250).trim();
+
+    // Name: text before first digit sequence
+    const nameMatch = after.match(/^([A-ZÁÉÍÓÚÑ][^\n\d]{3,70}?)(?=\s*[\d\n]|$)/i);
+    const name = (nameMatch ? nameMatch[1].trim() : code).slice(0, 80);
+
+    // Prices: 3 consecutive decimal numbers
+    const prices = (after.match(/\b(\d{1,5}[.,]\d{2})\b/g) || []).map(p => p.replace(',','.'));
+    const price = prices[0] || '';
+    const d30   = prices[1] || '';
+    const d25   = prices[2] || '';
+
+    // Qty: lone integer before first price
+    const qtyM = after.match(/^\s*(\d{1,3})\s+\d/);
+    const qty  = qtyM ? qtyM[1] : '1';
+
+    products.push({ code, name, desc:'', tags:[], img:null, qty, price, d30, d25,
+      link:'', linktext:'', wa:'', wamsg:'' });
+    count++;
+  }
+  return count;
+}
+
+// ── RENDER PRODUCTS LIST ──
+function renderProducts(){
+  document.getElementById('statsBar').textContent =
+    searchQ ? `${filtered.length} resultado${filtered.length!==1?'s':''} de ${products.length} productos`
+            : `${products.length} producto${products.length!==1?'s':''}`;
+
+  const list = document.getElementById('productList');
+  if(!filtered.length){
+    list.innerHTML = searchQ
+      ? `<div class="empty"><div class="empty-ic">🔍</div><p>Sin resultados para <b>"${searchQ}"</b></p></div>`
+      : `<div class="empty"><div class="empty-ic">📦</div><p>Sin productos.<br>Importa Excel/PDF o agrega manualmente.</p></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(p => {
+    const i = products.indexOf(p);
+    return `<div class="prow" onclick="openEdit(${i})">
+      <div class="pthumb">${p.img?`<img src="${p.img}">`:'🔧'}</div>
+      <div class="pinf">
+        <div class="pn">${p.name||'Sin nombre'}</div>
+        <div class="pc">${p.code||'—'}${p.price?' · S/ '+p.price:''}</div>
+      </div>
+      <button class="pdel" onclick="event.stopPropagation();delProduct(${i})">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function delProduct(i){
+  if(!confirm('¿Eliminar "'+products[i].name+'"?')) return;
+  products.splice(i,1);
+  filterProducts();
+  renderCat();
+  toast('Producto eliminado');
+}
+
+// ── RENDER CATALOG ──
+function renderCat(){
+  const cm = document.getElementById('cMain').value;
+  const ca = document.getElementById('cAcc').value;
+  const name = document.getElementById('sName').value || 'Proveedor';
+  const slogan = document.getElementById('sSlogan').value;
+  const subtitle = document.getElementById('sSubtitle').value;
+  const cols = parseInt(document.getElementById('gridCols').value) || 3;
+
+  // Header band
+  const hdr = document.getElementById('catHeader');
+  hdr.style.background = `linear-gradient(90deg, ${cm} 0%, ${shade(cm,20)} 60%, ${shade(cm,-10)} 100%)`;
+
+  if(logoUrl){
+    document.getElementById('catHeaderLogo').innerHTML = `<img src="${logoUrl}" class="cat-header-logo">`;
+    document.getElementById('catInfoLogo').innerHTML = `<img src="${logoUrl}" class="cat-info-logo">`;
+  } else {
+    document.getElementById('catHeaderLogo').innerHTML = `<div class="cat-header-logo-ph">${name}</div>`;
+    document.getElementById('catInfoLogo').innerHTML = `<div class="cat-info-logo-ph">🏢</div>`;
+  }
+  document.getElementById('catHeaderTitle').innerHTML = `▶ ${subtitle}`;
+  document.getElementById('catHeaderTitle').style.color = '#fff';
+  document.getElementById('catInfoName').textContent = name;
+  document.getElementById('catInfoSlogan').textContent = slogan;
+  document.getElementById('catFootBrand').textContent = name.toUpperCase();
+  document.getElementById('catFootBrand').style.color = cm;
+
+  const ph = document.getElementById('cPhone').value;
+  const em = document.getElementById('cEmail').value;
+  const wb = document.getElementById('cWeb').value;
+  document.getElementById('catInfoContacts').innerHTML =
+    [ph&&`<span>📞 ${ph}</span>`,em&&`<span>✉ ${em}</span>`,wb&&`<span>🌐 ${wb}</span>`].filter(Boolean).join('');
+
+  // Grid
+  const grid = document.getElementById('catGrid');
+  grid.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`;
+
+  if(!products.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:#bbb;font-size:.8rem">Agrega productos en la pestaña 📦</div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => {
+    const tags = (p.tags||[]).filter(Boolean).map(t=>`<span class="cat-tag" style="background:${ca}22;color:${ca}">${t}</span>`).join('');
+    let link = '';
+    if(p.wa){
+      const msg = encodeURIComponent(p.wamsg||`Hola, me interesa ${p.name} (${p.code})`);
+      link = `<a href="https://wa.me/${p.wa.replace(/\D/g,'')}?text=${msg}" class="cat-link" style="background:#25d36618;color:#25d366">💬 ${p.linktext||'WhatsApp'}</a>`;
+    } else if(p.link){
+      link = `<a href="${p.link}" target="_blank" class="cat-link" style="background:${cm}18;color:${cm}">🔗 ${p.linktext||'Ver más'}</a>`;
+    }
+
+    const hasPrices = p.price || p.d30 || p.d25;
+    const priceTable = hasPrices ? `
+      <div class="cat-price-table">
+        <div class="cat-pt-head">
+          <span>Cant.</span><span>Precio</span><span>30%</span><span>25%</span>
+        </div>
+        <div class="cat-pt-row">
+          <span>${p.qty||'1'}</span>
+          <span>${p.price||'—'}</span>
+          <span>${p.d30||'—'}</span>
+          <span style="background:#e0f2f1;color:#00695c">${p.d25||'—'}</span>
+        </div>
+      </div>` : '';
+
+    return `<div class="cat-card">
+      <div class="cat-img-wrap">${p.img?`<img src="${p.img}" alt="${p.name}">`:'🔧'}</div>
+      <div class="cat-body">
+        <div class="cat-code">${p.code||''}</div>
+        <div class="cat-name">${p.name}</div>
+        ${p.desc?`<div class="cat-desc">${p.desc}</div>`:''}
+        ${priceTable}
+        ${tags?`<div class="cat-tags">${tags}</div>`:''}
+        ${link}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ──
+function openAdd(){
+  editIdx=null;
+  document.getElementById('mTitle').textContent='Agregar Producto';
+  clearForm();
+  mTab('info',document.querySelector('.mtab'));
+  document.getElementById('mModal').classList.add('on');
+}
+function openEdit(i){
+  editIdx=i; const p=products[i];
+  document.getElementById('mTitle').textContent='Editar Producto';
+  document.getElementById('p-code').value=p.code||'';
+  document.getElementById('p-name').value=p.name||'';
+  document.getElementById('p-desc').value=p.desc||'';
+  document.getElementById('p-tags').value=(p.tags||[]).join(', ');
+  document.getElementById('p-qty').value=p.qty||'';
+  document.getElementById('p-price').value=p.price||'';
+  document.getElementById('p-d30').value=p.d30||'';
+  document.getElementById('p-d25').value=p.d25||'';
+  document.getElementById('p-link').value=p.link||'';
+  document.getElementById('p-linktext').value=p.linktext||'';
+  document.getElementById('p-wa').value=p.wa||'';
+  document.getElementById('p-wamsg').value=p.wamsg||'';
+  document.getElementById('p-imgurl').value='';
+  prodImg=p.img||null;
+  const pv=document.getElementById('pPrev');
+  if(prodImg){pv.src=prodImg;pv.style.display='block';document.getElementById('pPh').style.display='none';}
+  else{pv.style.display='none';document.getElementById('pPh').style.display='block';}
+  mTab('info',document.querySelector('.mtab'));
+  document.getElementById('mModal').classList.add('on');
+}
+function closeModal(){document.getElementById('mModal').classList.remove('on')}
+function clearForm(){
+  ['p-code','p-name','p-desc','p-tags','p-qty','p-price','p-d30','p-d25','p-link','p-linktext','p-wa','p-wamsg','p-imgurl']
+    .forEach(id=>document.getElementById(id).value='');
+  prodImg=null;
+  document.getElementById('pPrev').style.display='none';
+  document.getElementById('pPh').style.display='block';
+}
+function saveProduct(){
+  const name=document.getElementById('p-name').value.trim();
+  if(!name){alert('El nombre es obligatorio');return;}
+  const tags=document.getElementById('p-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const p={
+    code:document.getElementById('p-code').value.trim(),name,
+    desc:document.getElementById('p-desc').value.trim(),tags,img:prodImg,
+    qty:document.getElementById('p-qty').value.trim(),
+    price:document.getElementById('p-price').value.trim(),
+    d30:document.getElementById('p-d30').value.trim(),
+    d25:document.getElementById('p-d25').value.trim(),
+    link:document.getElementById('p-link').value.trim(),
+    linktext:document.getElementById('p-linktext').value.trim(),
+    wa:document.getElementById('p-wa').value.trim(),
+    wamsg:document.getElementById('p-wamsg').value.trim(),
+  };
+  if(editIdx!==null) products[editIdx]=p; else products.push(p);
+  closeModal(); filterProducts(); renderCat();
+  toast('✅ Producto guardado');
+}
+function mTab(name,el){
+  ['info','imagen','precios','links'].forEach(t=>{document.getElementById('mt-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+}
+
+// ── IMAGES ──
+function loadLogo(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    logoUrl=ev.target.result;
+    const p=document.getElementById('prevLogo');p.src=logoUrl;p.style.display='block';
+    document.getElementById('phLogo').style.display='none';
+    renderCat();
+  };r.readAsDataURL(f);
+}
+function loadPImg(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    prodImg=ev.target.result;
+    const p=document.getElementById('pPrev');p.src=prodImg;p.style.display='block';
+    document.getElementById('pPh').style.display='none';
+  };r.readAsDataURL(f);
+}
+function pImgUrl(){
+  const url=document.getElementById('p-imgurl').value.trim();if(!url)return;
+  prodImg=url;const p=document.getElementById('pPrev');p.src=url;p.style.display='block';
+  document.getElementById('pPh').style.display='none';
+}
+
+// ── EXPORT PDF ──
+async function exportPDF(){
+  renderCat();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sc-preview').classList.add('on');
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.bn')[2].classList.add('on');
+  document.getElementById('loadingEl').classList.add('on');
+  await new Promise(r=>setTimeout(r,500));
+  try{
+    const page=document.getElementById('catalogPage');
+    const canvas=await html2canvas(page,{scale:2.5,useCORS:true,allowTaint:true,backgroundColor:'#fff',logging:false});
+    const img=canvas.toDataURL('image/jpeg',.93);
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const w=pdf.internal.pageSize.getWidth();
+    const h=(canvas.height*w)/canvas.width;
+    // If content taller than A4, split pages
+    const pageH = pdf.internal.pageSize.getHeight();
+    if(h <= pageH){
+      pdf.addImage(img,'JPEG',0,0,w,h);
+    } else {
+      // Multi-page
+      let yPos = 0;
+      const ratio = canvas.width / w;
+      while(yPos < h){
+        const sliceH = Math.min(pageH, h - yPos);
+        const srcY = yPos * ratio;
+        const srcH = sliceH * ratio;
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = srcH;
+        sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+        const sliceImg = sliceCanvas.toDataURL('image/jpeg',.93);
+        if(yPos > 0) pdf.addPage();
+        pdf.addImage(sliceImg,'JPEG',0,0,w,sliceH);
+        yPos += pageH;
+      }
+    }
+    const n = document.getElementById('sName').value || 'catalogo';
+    pdf.save(`catalogo-${n.toLowerCase().replace(/\s+/g,'-')}.pdf`);
+    toast('✅ PDF descargado');
+  }catch(err){toast('❌ Error generando PDF');console.error(err);}
+  document.getElementById('loadingEl').classList.remove('on');
+}
+
+// ── HELPERS ──
+function shade(hex,pct){
+  const n=parseInt(hex.replace('#',''),16),a=Math.round(2.55*pct);
+  const r=Math.min(255,Math.max(0,(n>>16)+a));
+  const g=Math.min(255,Math.max(0,((n>>8)&0xff)+a));
+  const b=Math.min(255,Math.max(0,(n&0xff)+a));
+  return'#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+}
+function toast(msg){
+  const t=document.getElementById('toastEl');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+document.getElementById('mModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('mModal'))closeModal();
+});
+</script>
+</body>
+</html>
